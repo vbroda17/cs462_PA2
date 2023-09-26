@@ -1,0 +1,15 @@
+These are the elements of the myocean input files:
+
+XMAX YMAX STEPS 
+I00 I01 I02 ...
+I10 I11 I12 ...
+...
+
+XMAX is an integer for the number of points along the x dimension and YMAX is an integer for the number of points along the y dimension.
+
+Note that the boundaries (any point with an x or y index of 0, XMAX-1, or YMAX-1) contribute values for each internal point, but the boundary conditions never change.
+
+STEPS is an integer and is the number of times each point will be updated (number of iterations).
+
+The values I00, I01, etc. are initial values for each of the grid points. For the input file they will all be integers, but your simulation code should use single or double precision floating point numbers for each point's value.
+
