@@ -1,3 +1,12 @@
+/*
+myocean-onp.c
+Vincent Broda
+cs462
+Assignment 2
+This program is very similar to myocean.c, however it uses omp to help speed up the efficency of the average calculations.
+It takes an additional threads command line argument
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
@@ -50,7 +59,7 @@ int main(int argc, char **argv)
         }
     }
 
-    // making individual cells
+    // making initializing cells and grid
     for(i = 0; i < yMax; i++)
     {
         for(j = 0; j < xMax; j++)
@@ -78,18 +87,18 @@ int main(int argc, char **argv)
     }
 
     // starting time
-    start = omp_get_wtime(); // timing this. 
+    start = omp_get_wtime();
 
     // parallel part about to begin
-    for(step = 0; step < steps; step++) // not doing this one in parralell since each step will effect the following one
+    for(step = 0; step < steps; step++) // not doing this loop in parralell since each step will effect the following one, I belive it could cause a diffrent result easily, but it would most likely still converge if mutexes are used properly
     {
         // setting if we are doing red or black
         if(step % 2 == 0) tmp_class = RED;
         else tmp_class = BLACK;
         // looping through grid
         maxChange = 0;
-        #pragma omp parallel
-        #pragma omp for private(tmp_node, j, avg) reduction(max:maxChange) // shared grid, tmp_class private tmp_node
+        // Parallel part, we are doing all of the average calculations as threads and using the reduction feture to help use check the convergence
+        #pragma omp parallel for private(tmp_node, j, avg) reduction(max:maxChange) // shared(grid, tmp_class)
         for(i = 1; i < yMax - 1; i++)
         {
             for(j = 1; j < xMax - 1; j++)
@@ -113,7 +122,7 @@ int main(int argc, char **argv)
             if(xMax < 20)       // so terminal isnt flooded on bigger inputs
             {
                 for(i = 0; i < yMax; i++)
-                {   // temp
+                {
                     for(j = 0; j < xMax; j++)
                     {
                         tmp_node = grid[i][j];

@@ -1,3 +1,12 @@
+/*
+myocean-onp.c
+Vincent Broda
+cs462
+Assignment 2
+This program will act as a basic ocean temperature simulator. It uses a red-black structure to form the grid.
+It is completely serial in implimentation, but does use omp to time how long it takes.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
