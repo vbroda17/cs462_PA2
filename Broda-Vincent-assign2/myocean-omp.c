@@ -46,7 +46,6 @@ int main(int argc, char **argv)
 
     // setting number of threads
     omp_set_num_threads(numThreads);
-
     // allocating memory, done in three parts
     grid = (Node***)malloc(yMax * sizeof(Node**));
     for(i = 0; i < yMax; i++) grid[i] = (Node**)malloc(xMax * sizeof(Node*));

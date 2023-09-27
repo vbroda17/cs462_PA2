@@ -164,10 +164,10 @@ Average TIME: .11299702000000000000
 
 myocean-omp.c - Parallel Version
 Doing 100 runs each
-Average TIME with 1 threads: .95354520000000000000
-Average TIME with 2 threads: .52398770000000000000
-Average TIME with 4 threads: .29263940000000000000
-Average TIME with 8 threads: .27945730000000000000
+Average TIME with 1 threads:  .95354520000000000000
+Average TIME with 2 threads:  .52398770000000000000
+Average TIME with 4 threads:  .29263940000000000000
+Average TIME with 8 threads:  .27945730000000000000
 Average TIME with 16 threads: .77983200000000000000
 
 I ran it less times with the parrellel version because it was just taking to long
@@ -178,7 +178,8 @@ We also will not expect to see exactly doubled speed because:
     1. Only a section of the code is will be ran in parallel, this being the averages that are cacllulated and not the steps.
     2. Their is overhead apparent with threads.
 
-I would also expect that the larger the initial grid, the more benifits will come from having more threads, however, this was never the case for me. 
+I would also expect that the larger the initial grid, the more benifits will come from having more threads. 
+This is kinda tue as through 8 threads we see improvements, but when I tried to look at 16, things got disapointing, but not entiraly surprising.
 I'm guessing it is due to both hardware limitations and grid size.
 
 It is also worth noting that I am only timing from the molment the program will start looping through each step of the calculations, and end when the steps have completed or 
