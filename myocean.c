@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
-
+#include <math.h>
 
 enum {BLACK, RED};
 
@@ -25,8 +25,10 @@ int main(int argc, char **argv)
     Node *tmp_node;
     double avg;
     double start, end; 
+    double convergenceEpsilon = 0.005;  // picked kinda arbitrarily, I feel like this is a small number but doesn't take to long
+    double maxChange = 0;
 
-    // doing this so the input files can be easilt piped in
+    // doing this so the input files can be easily piped in
     if(argc != 4)
     {
         scanf("%d %d %d", &xMax, &yMax, &steps);
@@ -37,6 +39,7 @@ int main(int argc, char **argv)
         yMax = atoi(argv[2]);
         steps = atoi(argv[3]);
     }
+
     // allocating memory, done in three parts
     grid = (Node***)malloc(yMax * sizeof(Node**));
     for(i = 0; i < yMax; i++) grid[i] = (Node**)malloc(xMax * sizeof(Node*));
@@ -80,6 +83,7 @@ int main(int argc, char **argv)
     start = omp_get_wtime(); // timing this. 
     for(step = 0; step < steps; step++)
     {
+        maxChange = 0;  // set for each step
         // setting if we are doing red or black
         if(step % 2 == 0) tmp_class = RED;
         else tmp_class = BLACK;
@@ -96,6 +100,7 @@ int main(int argc, char **argv)
                     if(tmp_node->north != NULL, tmp_node->south != NULL, tmp_node->east != NULL, tmp_node->west != NULL)
                     {
                         avg = (tmp_node->north->temp + tmp_node->south->temp + tmp_node->east->temp + tmp_node->west->temp + tmp_node->temp) / 5.0;
+                        if(fabs(avg - tmp_node->temp) > maxChange) maxChange = fabs(avg - tmp_node->temp);
                         tmp_node->temp = avg;
                     }
                 }
@@ -118,6 +123,14 @@ int main(int argc, char **argv)
             }
             printf("\n");
         }
+
+        if(maxChange <= convergenceEpsilon)
+        {
+            printf("Convergence within %lf achived in %d steps\n", convergenceEpsilon, steps);
+            break;
+        }
+
+        printf("MAX CHANGE: %lf\n", maxChange);
     }
     end = omp_get_wtime(); 
 
