@@ -28,10 +28,11 @@ int main(int argc, char **argv)
     double convergenceEpsilon = 0.001;  // picked kinda arbitrarily, I feel like this is a small number but doesn't take to long. I also changed this often 
     double maxChange = 0;
 
-    // doing this so the input files can be easily piped in
     if(argc != 4)
     {
-        scanf("%d %d %d", &xMax, &yMax, &steps);
+        //scanf("%d %d %d", &xMax, &yMax, &steps);// was doing this so the input files can be easily piped in with the base given
+        printf("error: usage ./myocean xMax yMax steps\nThen build grid on stdin\n");
+        exit(1);
     }
     else
     {
@@ -44,15 +45,11 @@ int main(int argc, char **argv)
     grid = (Node***)malloc(yMax * sizeof(Node**));
     for(i = 0; i < yMax; i++) grid[i] = (Node**)malloc(xMax * sizeof(Node*));
     for(i = 0; i < yMax; i++)
-    {
-        for(j = 0; j < xMax; j++)
-        {
-            // allocate individual node
-            grid[i][j] = (Node*)malloc(sizeof(Node));
-        }
+    {   // allocate individual node
+        for(j = 0; j < xMax; j++) grid[i][j] = (Node*)malloc(sizeof(Node));
     }
 
-    // making individual cells
+    // initialize grid and node data
     for(i = 0; i < yMax; i++)
     {
         for(j = 0; j < xMax; j++)
@@ -67,50 +64,52 @@ int main(int argc, char **argv)
             tmp_node = grid[i][j];
             tmp_node->temp = (double)tmp_temp;
 
-            // Initialize edges, neighbors are null if the node isn't in range
+            // Initialize edges, neighbors are null if the node isn't in range. This way worked when a bunch of if statments didn't for some reason
             tmp_node->north = (i > 0) ? grid[i - 1][j] : NULL;
             tmp_node->south = (i < yMax - 1) ? grid[i + 1][j] : NULL;
             tmp_node->east = (j < xMax - 1) ? grid[i][j + 1] : NULL;
             tmp_node->west = (j > 0) ? grid[i][j - 1] : NULL;
 
-            // setting Node as read or black. making assumption of size being 2^n + 2
+            // setting Node as read or black. making assumption of size being 2^n + 2, makes checks easier later
             if((i + j) % 2 == 0) tmp_node->node_class = BLACK;
             else tmp_node->node_class = RED;
         }
     }
 
-   // serial traversing, red on even and black on odd steps.
-    start = omp_get_wtime(); // timing this. 
+    // This is the section I am intrested in timing
+    start = omp_get_wtime();
+
+    // serial traversing, red on even and black on odd steps.
     for(step = 0; step < steps; step++)
     {
         maxChange = 0;  // set for each step
         // setting if we are doing red or black
         if(step % 2 == 0) tmp_class = RED;
         else tmp_class = BLACK;
+
         // looping through grid
         for(i = 1; i < yMax - 1; i++)
         {
             for(j = 1; j < xMax - 1; j++)
             {
-                //doing caclulation only if right step
+                //doing caclulation only if right step. I tried to do in smarter ways with some type of index thing but that tended to introduce bugs
                 tmp_node = grid[i][j];
                 if(tmp_class == tmp_node->node_class)
                 {
                     avg = (tmp_node->north->temp + tmp_node->south->temp + tmp_node->east->temp + tmp_node->west->temp + tmp_node->temp) / 5.0;
+                    // storing max change, if it falls under a certain point then we will end the main loop
                     if(fabs(avg - tmp_node->temp) > maxChange) maxChange = fabs(avg - tmp_node->temp);
                     tmp_node->temp = avg;
                 }
             }
         }
         
-        ////////// WANT TO HAVE THE REDUCED VALUE BY HERE
-
         // printing every 30 steps
         if(step % 30 == 0)
         //if(0 == 0) // this is if i want to check every step
         {
             printf("\nStep: %d\n", step);
-            if(xMax < 20)       // so terminal isnt flooded on bigger inputs
+            if(xMax < 20)       // so terminal isnt flooded on bigger inputs, will only print out updates us grid on smaller sizes
             {
                 for(i = 0; i < yMax; i++)
                 {   // temp
@@ -122,21 +121,25 @@ int main(int argc, char **argv)
                     printf("\n");
                 }
             }
+            // will always update the maxChange, so you have one way of knowing
             printf("MAX CHANGE: %lf\n", maxChange);
             printf("\n");
         }
 
+        // exit check for convergene
         if(maxChange <= convergenceEpsilon)
         {
             printf("Convergence within %lf achived in %d steps\n", convergenceEpsilon, step);
             break;
         }
     }
+
+    // finished the work, end the time
     end = omp_get_wtime(); 
 
     printf("Final:\n");
     for(i = 0; i < yMax; i++)
-    {   // temperature
+    { 
         for(j = 0; j < xMax; j++)
         {
             tmp_node = grid[i][j];
