@@ -96,17 +96,15 @@ int main(int argc, char **argv)
                 tmp_node = grid[i][j];
                 if(tmp_class == tmp_node->node_class)
                 {
-
-                    if(tmp_node->north != NULL, tmp_node->south != NULL, tmp_node->east != NULL, tmp_node->west != NULL)
-                    {
-                        avg = (tmp_node->north->temp + tmp_node->south->temp + tmp_node->east->temp + tmp_node->west->temp + tmp_node->temp) / 5.0;
-                        if(fabs(avg - tmp_node->temp) > maxChange) maxChange = fabs(avg - tmp_node->temp);
-                        tmp_node->temp = avg;
-                    }
+                    avg = (tmp_node->north->temp + tmp_node->south->temp + tmp_node->east->temp + tmp_node->west->temp + tmp_node->temp) / 5.0;
+                    if(fabs(avg - tmp_node->temp) > maxChange) maxChange = fabs(avg - tmp_node->temp);
+                    tmp_node->temp = avg;
                 }
             }
         }
         
+        ////////// WANT TO HAVE THE REDUCED VALUE BY HERE
+
         // printing every 30 steps
         if(step % 30 == 0)
         //if(0 == 0) // this is if i want to check every step

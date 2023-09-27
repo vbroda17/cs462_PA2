@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
-
+#include <math.h>
 
 enum {BLACK, RED};
 
@@ -25,6 +25,10 @@ int main(int argc, char **argv)
     Node *tmp_node;
     double avg;
     double start, end; 
+    double convergenceEpsilon = 0.001;  // picked kinda arbitrarily, I feel like this is a small number but doesn't take to long. I also changed this often 
+    double maxChange = 0;
+
+    if(argc != 5) exit(1);
 
     xMax = atoi(argv[1]);
     yMax = atoi(argv[2]);
@@ -77,15 +81,15 @@ int main(int argc, char **argv)
     start = omp_get_wtime(); // timing this. 
 
     // parallel part about to begin
-
-    #pragma omp parrallel
     for(step = 0; step < steps; step++) // not doing this one in parralell since each step will effect the following one
     {
         // setting if we are doing red or black
         if(step % 2 == 0) tmp_class = RED;
         else tmp_class = BLACK;
         // looping through grid
-        #pragma omp for collapse(2) private(tmp_node, j) // shared grid, tmp_class private tmp_node
+        maxChange = 0;
+        #pragma omp parallel
+        #pragma omp for private(tmp_node, j, avg) reduction(max:maxChange) // shared grid, tmp_class private tmp_node
         for(i = 1; i < yMax - 1; i++)
         {
             for(j = 1; j < xMax - 1; j++)
@@ -94,31 +98,38 @@ int main(int argc, char **argv)
                 tmp_node = grid[i][j];
                 if(tmp_class == tmp_node->node_class)
                 {
-
-                    if(tmp_node->north != NULL && tmp_node->south != NULL && tmp_node->east != NULL && tmp_node->west != NULL)
-                    {
-                        avg = (tmp_node->north->temp + tmp_node->south->temp + tmp_node->east->temp + tmp_node->west->temp + tmp_node->temp) / 5.0;
-                        tmp_node->temp = avg;
-                    }
+                    avg = (tmp_node->north->temp + tmp_node->south->temp + tmp_node->east->temp + tmp_node->west->temp + tmp_node->temp) / 5.0;
+                    double change = fabs(avg - tmp_node->temp);
+                    if (change > maxChange) maxChange = change;
+                    tmp_node->temp = avg;
                 }
             }
         }
         
         // printing every 30 steps
         if(step % 30 == 0)
-        //if(0 == 0) // this is if i want to check every step
         {
             printf("\nStep: %d\n", step);
-            for(i = 0; i < yMax; i++)
-            {   // temp
-                for(j = 0; j < xMax; j++)
-                {
-                    tmp_node = grid[i][j];
-                    printf("%.3lf ", tmp_node->temp);
+            if(xMax < 20)       // so terminal isnt flooded on bigger inputs
+            {
+                for(i = 0; i < yMax; i++)
+                {   // temp
+                    for(j = 0; j < xMax; j++)
+                    {
+                        tmp_node = grid[i][j];
+                        printf("%.3lf ", tmp_node->temp);
+                    }
+                    printf("\n");
                 }
-                printf("\n");
             }
+            printf("MAX CHANGE: %lf\n", maxChange);
             printf("\n");
+        }
+
+        if(maxChange <= convergenceEpsilon)
+        {
+            printf("Convergence within %lf achived in %d steps\n", convergenceEpsilon, step);
+            break;
         }
     }
     end = omp_get_wtime(); 
