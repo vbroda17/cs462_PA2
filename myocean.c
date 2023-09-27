@@ -25,7 +25,7 @@ int main(int argc, char **argv)
     Node *tmp_node;
     double avg;
     double start, end; 
-    double convergenceEpsilon = 0.005;  // picked kinda arbitrarily, I feel like this is a small number but doesn't take to long
+    double convergenceEpsilon = 0.001;  // picked kinda arbitrarily, I feel like this is a small number but doesn't take to long. I also changed this often 
     double maxChange = 0;
 
     // doing this so the input files can be easily piped in
@@ -112,25 +112,27 @@ int main(int argc, char **argv)
         //if(0 == 0) // this is if i want to check every step
         {
             printf("\nStep: %d\n", step);
-            for(i = 0; i < yMax; i++)
-            {   // temp
-                for(j = 0; j < xMax; j++)
-                {
-                    tmp_node = grid[i][j];
-                    printf("%.3lf ", tmp_node->temp);
+            if(xMax < 20)       // so terminal isnt flooded on bigger inputs
+            {
+                for(i = 0; i < yMax; i++)
+                {   // temp
+                    for(j = 0; j < xMax; j++)
+                    {
+                        tmp_node = grid[i][j];
+                        printf("%.3lf ", tmp_node->temp);
+                    }
+                    printf("\n");
                 }
-                printf("\n");
             }
+            printf("MAX CHANGE: %lf\n", maxChange);
             printf("\n");
         }
 
         if(maxChange <= convergenceEpsilon)
         {
-            printf("Convergence within %lf achived in %d steps\n", convergenceEpsilon, steps);
+            printf("Convergence within %lf achived in %d steps\n", convergenceEpsilon, step);
             break;
         }
-
-        printf("MAX CHANGE: %lf\n", maxChange);
     }
     end = omp_get_wtime(); 
 

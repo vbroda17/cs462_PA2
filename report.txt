@@ -5,7 +5,7 @@ Assignment 2 Report
 ###################################
 myocean.c
 Argument/Demonstration
-To prove my program works, I used the following, (steps could be anything here, depending on how much you want to see)
+To prove my program works, I used the following, (steps could be anything here, since I have it codes to stop after the max any node changes is <= 0.005
 xMax = 6
 yMax = 6
 steps = _
@@ -16,8 +16,7 @@ Grid:
 1 10 10 10 10 1
 1 10 10 10 10 1
 1 1  1  1  1  1
-This follows the 2^n +2 rule that the size should follow, as well as be enough steps to come to realy average out to what the boarder is.
-This is also possible since every boarder is the name number.
+This is another test grid I came up with, and we can use it to test convergence, since it should get close to 1
 
 The first thing I wanted to check is that the red black subsets where working correctly and that black went on odd steps and red on even.
 This was done assuming the steps are indexed on zero,which i will do with everyting going forward, so red would cells should update first.
