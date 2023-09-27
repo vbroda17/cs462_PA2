@@ -2,13 +2,20 @@ Vincent Broda
 CS462
 Assignment 2 Report
 
-###################################
-myocean.c
+##########################################################
+
+##########################################################
 Argument/Demonstration
-To prove my program works, I used the following, (steps could be anything here, since I have it codes to stop after the max any node changes is <= 0.005
+
+myocean.c
+To prove my program works, I think their are two basic concepts that I will check for. 
+1. Manually going through and checking that the calculations are done correctly and the way we want it.
+2. Look for the grid to converge to a stabel point, since the boarder nodes are constant.
+
+To help show check 1, we can use the following
 xMax = 6
 yMax = 6
-steps = _
+steps = 10000
 Grid:
 1 1  1  1  1  1
 1 10 10 10 10 1
@@ -77,53 +84,159 @@ Step 1:
 1.000 1.000 1.000 1.000 1.000 1.000 
 which besides going one decimal place further, gives us the same answer.
 
-We could keep doing this for as many steps as we want, however, since the boarder nodes are all the same and remain constant, we can expect that given enought time, the averages will converge to that constant number. In this case we should expect every changing node to have its temperature keep falling to 1 until all of them have reached this number. The technicalities of this might be weird due to floating point numbers, but we should expect something like:
-1 1 1 1 1 1
-1 1 1 1 1 1
-1 1 1 1 1 1
-1 1 1 1 1 1
-1 1 1 1 1 1
-1 1 1 1 1 1
+We could keep doing this for as many steps as we want, however, since the boarder nodes are all the same and remain constant, we can expect that given enought time, the averages will converge to that constant number. In this case we should expect every changing node to have its temperature keep falling to 1 until all of them have reached this number. The technicalities of this might be weird due to floating point numbers, but we should expect something close to:
+1 1  1  1  1  1
+1 1. 1. 1. 1. 1
+1 1. 1. 1. 1. 1
+1 1. 1. 1. 1. 1
+1 1. 1. 1. 1. 1
+1 1  1  1  1  1
 
-to happen after a long enough time. This is an approximation since technically most of those 1's are really a number slightly bigger than 1, but this diffrence is so small I do not think it matters. It will also not take that long to occur for a grid this small, so if we look at step 77, we wil see
-Step: 77
-1.000 1.000 1.000 1.000 1.000 1.000 
-1.000 1.000 1.000 1.000 1.000 1.000 
-1.000 1.000 1.000 1.000 1.000 1.000 
-1.000 1.000 1.000 1.000 1.000 1.000 
-1.000 1.000 1.000 1.000 1.000 1.000 
-1.000 1.000 1.000 1.000 1.000 1.000 
+This stoping point happens when the most any one cell changes in temperature is <= 0.001
+That point was picked kinda arbitrarily, but it should be small enough to where we don't care to go any smaller while also not going on to long (that is oppinionated though)
+When running the program, we get:
+Convergence within 0.001000 achived in 61 steps
+Final:
+1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 
+1.000000 1.001218 1.002250 1.001970 1.001391 1.000000 
+1.000000 1.002250 1.003188 1.003641 1.001970 1.000000 
+1.000000 1.001970 1.003641 1.003188 1.002250 1.000000 
+1.000000 1.001391 1.001970 1.002250 1.001218 1.000000 
+1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 
 
-It happens in part to me printing out only 3 decimal points of precision, but we see that the effect of symetry we expected has occured.
+Thus, we see the program converges given enough time. Giving us two big signs are program is working correctly.
 
-Time Analysis
-I ran the following bach script:
+##########################################################
+
+##########################################################
+Argument/Demonstration
+
+myocean-omp.c
+
+To prove this works, we can basically follow the same logic as we did with the serial version.
+Since it is still set up in a red-black pattern, it does not matter what order we do the average caculations within a specific step, as long as a step is completed before the next.
+I made sure to do it this way so we will be guarenteed to get the same answer as the serial version, which happens upon inspection of the programs outsputs.
+
+The only real diffrence we should do now is test it with diffrent number of threads. I chose to test 1, 2, 4, 8, and 16.
+
+Doing such, we get:
+Convergence within 0.001000 achived in 61 steps
+Final:
+1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 
+1.000000 1.001218 1.002250 1.001970 1.001391 1.000000 
+1.000000 1.002250 1.003188 1.003641 1.001970 1.000000 
+1.000000 1.001970 1.003641 1.003188 1.002250 1.000000 
+1.000000 1.001391 1.001970 1.002250 1.001218 1.000000 
+1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 
+
+We get this everytime, the only diffrence being from the time of completion. So since I made no significant change to the allgorithm, 
+and instead just parallelized a section of code that can be ran in any order, we can be sure that the code using OpenMp is correct to.
+
+##########################################################
+
+##########################################################
+Time Analysis - Both programs
+
+Processor tests ran on: Intel® Xeon(R) CPU E3-1505M v6 @ 3.00GHz × 8
+
+I ran ran several variations of two scripts, timemyocean.sh and timemyocean-omp.sh, which can be see below.
+They both run my program a set number of times, grep the output for the time, and take the average.
+The only diffrence with the timemyocean-omp.sh is that it will test the program with multiple threads.
+
+When ran with myocean.in, these where the results:
+
+myocean.c - Serial Version
+Doing 1000 runs
+Average TIME: .11299702000000000000
+
+myocean-omp.c - Parallel Version
+Doing 1000 runs
+Average TIME with 1 threads: .12321135000000000000
+Average TIME with 2 threads: .07188714000000000000
+Average TIME with 4 threads: .05704198000000000000
+Average TIME with 8 threads: .03840997000000000000
+Average TIME with 16 threads: .28191063000000000000
+
+This follows a similar structure to another test I ran, this time with a 128x128 grid, that was just myocean.in's grid copu and pasted 4 times:
+myocean.c - Serial Version
+Doing 1000 runs
+Average TIME: .11299702000000000000
+
+myocean-omp.c - Parallel Version
+Doing 100 runs each
+Average TIME with 1 threads: .95354520000000000000
+Average TIME with 2 threads: .52398770000000000000
+Average TIME with 4 threads: .29263940000000000000
+Average TIME with 8 threads: .27945730000000000000
+Average TIME with 16 threads: .77983200000000000000
+
+I ran it less times with the parrellel version because it was just taking to long
+
+Thus, I think we see patterns that will make sence with this type of coding.
+One thread running in parallel should take longer than the serial version due to overhead that is with threads
+We also will not expect to see exactly doubled speed because:
+    1. Only a section of the code is will be ran in parallel, this being the averages that are cacllulated and not the steps.
+    2. Their is overhead apparent with threads.
+
+I would also expect that the larger the initial grid, the more benifits will come from having more threads, however, this was never the case for me. 
+I'm guessing it is due to both hardware limitations and grid size.
+
+It is also worth noting that I am only timing from the molment the program will start looping through each step of the calculations, and end when the steps have completed or 
+when the convergence has been reached. I am not timing the initilization of the grid, as I wrote that part to be more bug free than efficiant.
+I also did not parallelize that part. Regardless, I approached the problem as we are restricted by moving one step at a time, however we can speed up how quickly we can do each step.
+This area of the code is where the majority of the time will be spent.
+
+##########################################################
+
+##########################################################
+shell scripts used to time programs
+These are kinda janky, have to hardcode specific files you want to use as well as args for program
+timemyocean.sh :
 #!/bin/bash
 
-# Number of runs
 num_runs=1000
-
+xMax=64
+yMax=64
+steps=10000
 total_time=0
 
+echo "Doing $num_runs runs"
 # Loop for the specified number of runs
 for ((i = 1; i <= num_runs; i++)); do
-    # Run myocean with input file and capture the TIME value
-    time_output=$(./myocean < myocean.in | grep "TIME" | awk '{print $2}')
+    # Run myocean with input file and save the TIME value
+    time_output=$(./myocean $xMax $yMax $steps < myoceancopy.in | grep "TIME" | awk '{print $2}')
     
-    # Check if the output contains TIME value
+    # Check if the output contains TIME value, helped with errors above
     if [[ -n "$time_output" ]]; then
         # Add the TIME value to the total_time
         total_time=$(echo "$total_time + $time_output" | bc -l)
     fi
 done
 
-# Calculate the average TIME value
 average_time=$(echo "$total_time / $num_runs" | bc -l)
-
-# Print the average TIME value
 echo "Average TIME: $average_time"
 
-which takes the average time given by myocean.c when ran 1000 times with the larger file. This time comes from putting omp_get_wtime() after the grid is set up, so it is only timing the steps, where the averages are calculated. After running this, I got: Average TIME: .05073056000000000000. 
+timemyocean-omp.sh:
+#!/bin/bash
 
-############################################
-myocean-omp.c
+num_runs=100
+xMax=128
+yMax=128
+steps=10000
+
+echo "Doing $num_runs runs each"
+# Loop for different thread counts
+for threads in 1 2 4 8 16; do
+    total_time=0
+
+    for ((i = 1; i <= num_runs; i++)); do
+        time_output=$(./myocean-omp $xMax $yMax $steps $threads < myoceancopy2.in | grep "TIME" | awk '{print $2}')
+        
+        if [[ -n "$time_output" ]]; then
+            total_time=$(echo "$total_time + $time_output" | bc -l)
+        fi
+    done
+
+    average_time=$(echo "$total_time / $num_runs" | bc -l)
+    echo "Average TIME with $threads threads: $average_time"
+done
